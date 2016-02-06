@@ -17,6 +17,8 @@ namespace osuP
 
         int currentIndex;
 
+        bool playing;
+
         bool rightClick;
 
         Form notify = new Form();
@@ -35,7 +37,19 @@ namespace osuP
             getFiles();
 
             setVolumeBar();
-       
+
+            //Set to first song
+            listView1.Items[0].Selected = true;
+
+
+            // p.play();
+            //  p.pause(this.Handle);
+
+            playing = true;
+            pictureBox3.Image = Properties.Resources.pause;
+
+         
+
         }
 
        
@@ -123,7 +137,7 @@ namespace osuP
 
                     currentIndex = selected.Index;
 
-                    label1.Text = selectedFilePath;
+                    label1.Text = Path.GetFileNameWithoutExtension(selectedFilePath);
                   
                     p.play(selectedFilePath, this.Handle);
 
@@ -209,7 +223,17 @@ namespace osuP
         //Pause Music
         private void button6_Click(object sender, EventArgs e)
         {
-            p.pause(this.Handle);
+            if (playing == true)
+            {
+                p.pause(this.Handle);
+                playing = false;
+            }
+            else
+            {
+                p.pause(this.Handle);
+                playing = true;
+            }
+           
         }
 
         private void startProgressBar1(string filePath)
@@ -226,6 +250,12 @@ namespace osuP
             this.Controls.Add(this.trackBar2);
 
             timer1.Tick += new EventHandler(timer1_Tick);
+
+            timer2.Enabled = true;
+            timer2.Start();
+            timer2.Interval = 1000;  
+
+            timer2.Tick += new EventHandler(timer2_Tick);
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -262,6 +292,75 @@ namespace osuP
             p.setVolume(trackBar1.Value);
 
          
+
+        }
+
+        //Next song
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+            if (listView1.Items.Count - 1 > currentIndex)
+            {
+                listView1.Items[listView1.SelectedItems[0].Index + 1].Selected = true;
+
+            }
+            else
+            {
+                listView1.Items[0].Selected = true;
+            }
+
+        }
+
+        //Previous song
+        private void pictureBox2_Click(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems.Count - 1 > 0)
+            {
+                listView1.Items[listView1.SelectedItems[0].Index - 1].Selected = true;
+
+            }
+            else
+            {
+                listView1.Items[listView1.Items.Count - 1].Selected = true;
+            }
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            if (playing == true)
+            {
+                p.pause(this.Handle);
+                playing = false;  
+                
+                pictureBox3.Image = null;
+                pictureBox3.Image = Properties.Resources.play;
+                pictureBox3.Refresh();
+
+            }
+            else
+            {
+                p.pause(this.Handle);
+                playing = true;
+
+                pictureBox3.Image = null;
+                pictureBox3.Image = Properties.Resources.pause ;
+                pictureBox3.Refresh();
+                
+            }
+        }
+
+        private void trackBar1_Scroll_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+      
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
 
         }
     }

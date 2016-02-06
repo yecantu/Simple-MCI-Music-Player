@@ -6,8 +6,7 @@ using System.Windows.Forms;
 namespace osuP
 {
     class osuPlayer
-    {
-        public const int MM_MCINOTIFY = 0x3B9;
+    {    
         Form end = new Form();
 
         bool paused;
