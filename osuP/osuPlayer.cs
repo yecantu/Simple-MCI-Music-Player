@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Windows.Forms;
 
 namespace osuP
 {
     class osuPlayer
     {    
-        Form end = new Form();
-
+        // Variables 
         bool paused;
 
+        // Import dynamic link library, winmm, Windows Multimedia 
         [DllImport("winmm.dll")]
+
+        // Media Control interface variable, to send commands
         private static extern long mciSendString(string lpstrCommand, StringBuilder lpstrReturnString, int uReturnLength, IntPtr hwndCallback);
 
         public osuPlayer()
@@ -19,72 +20,65 @@ namespace osuP
             paused = false;
         }
 
+        // Open file
         public void open(string file)
         {
-            //string command = "open \"" + file + "\" type MPEGVideo alias MyMp3";
-            //mciSendString(command, null, 0, 0);
+            mciSendString("open \"" + file + "\" type MPEGVideo alias MyMp3", null, 0, IntPtr.Zero);
         }
 
+        // Play song 
         public void play()
-        {
-            //string command = "play MyMp3";
-            //mciSendString(command, null, 0, 0);
+        {  
+            mciSendString("play MyMp3", null, 0, IntPtr.Zero);
+            paused = false;
         }
 
+        // Play song 
         public void play(string path, IntPtr handle)
         {
-           // this.end = cb;
 
-            string command = "open \"" + path + "\" type MPEGVideo alias MyMp3";
-            mciSendString(command, null, 0, IntPtr.Zero);
-            command = "play MyMp3 notify";
-            mciSendString(command, null, 0, handle);
+            open(path);
+            mciSendString("play MyMp3 notify", null, 0, handle);
+            paused = false;
 
-                 
-            //mciSendString(command, null, 0, );
-            
         }
 
+        // Pause song or resume
         public void pause(IntPtr handle)
         {
-            string command;
-
             if(paused == false)
             {
-                command = "pause MyMp3";
-                mciSendString(command, null, 0, IntPtr.Zero);
+               
+                mciSendString("pause MyMp3", null, 0, IntPtr.Zero);
                 paused = true;
             }
             else
             {
-                command = "play MyMp3 notify";
-                mciSendString(command, null, 0, handle);
+                mciSendString("play MyMp3 notify", null, 0, handle);
                 paused = false;
-            }
-          
+            }      
         }
 
+        // Stop song
         public void stop()
-        {
-            string command = "stop MyMp3";
-            mciSendString(command, null, 0, IntPtr.Zero);
-
-            command = "close MyMp3";
-            mciSendString(command, null, 0, IntPtr.Zero);
+        {     
+            mciSendString("stop MyMp3", null, 0, IntPtr.Zero);
+            mciSendString("close MyMp3", null, 0, IntPtr.Zero);
         }
 
+        // Get length of song in milliseconds
         public string getLength(string path)
         {
             StringBuilder mssg = new StringBuilder(255);
 
-            string command = "open \"" + path + "\" type MPEGVideo alias MyMp3";
-            mciSendString(command, null, 0, IntPtr.Zero);
+            open(path);
             mciSendString("set MyMp3 time format ms", null, 0, IntPtr.Zero);
             mciSendString("status MyMp3 length", mssg, mssg.Capacity, IntPtr.Zero);
 
             return mssg.ToString();       
         }
 
+        // Get current position of song
         public int getPosition()
         {
             StringBuilder mssg = new StringBuilder(255);
@@ -93,11 +87,13 @@ namespace osuP
             return Int32.Parse(mssg.ToString());
         }
 
+        // Skip to another part in song
         public void seek(int position, IntPtr handle)
         {
             mciSendString("play MyMp3 from " +  position.ToString() + " notify", null, 0, handle);
         }
 
+        // Set volume for music player
         public void setVolume(int value)
         {
             mciSendString("setaudio MyMp3 volume to " + value.ToString(), null, 0, IntPtr.Zero);

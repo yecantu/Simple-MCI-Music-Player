@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 
@@ -16,12 +9,7 @@ namespace osuP
         osuPlayer p = new osuPlayer();
 
         int currentIndex;
-
         bool playing;
-
-        bool rightClick;
-
-        Form notify = new Form();
 
         private const int MM_MCINOTIFY = 0x3B9;
         private const int MCI_NOTIFY_SUCCESS = 0x01;
@@ -33,119 +21,65 @@ namespace osuP
         {
             InitializeComponent();
 
-            //Get song list
+            // Get song list
             getFiles();
 
+            // Set Volume
             setVolumeBar();
 
-            //Set to first song
+            // Set to first song
             listView1.Items[0].Selected = true;
 
 
             // p.play();
-            //  p.pause(this.Handle);
+            
 
-            playing = true;
-            pictureBox3.Image = Properties.Resources.pause;
+           // playing = true;
+            p.pause(this.Handle);
 
-         
-
-        }
-
-       
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            openFileDialog1.ShowDialog();
-        }
-
-        private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
-        {
-            label1.Text = openFileDialog1.FileName;
-            p.open(openFileDialog1.FileName);
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            p.play();
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            p.stop();
-        }
-
-        // Previous Song
-        private void button4_Click(object sender, EventArgs e)
-        {
-            if (listView1.SelectedItems.Count-1 > 0)
-            {
-                listView1.Items[listView1.SelectedItems[0].Index -1].Selected = true;
-
-            }
-            else
-            {
-                listView1.Items[listView1.Items.Count-1].Selected = true;
-            }
-        }
-
-        // Next Song
-        private void button5_Click(object sender, EventArgs e)
-        {
-
-            if (listView1.Items.Count - 1 > currentIndex)
-            {
-                listView1.Items[listView1.SelectedItems[0].Index + 1].Selected = true;
-
-            }
-            else
-            {
-                listView1.Items[0].Selected = true;
-            }
-
+            pictureBox3.Image = Properties.Resources.pause;       
 
         }
 
-        private void listView1_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == System.Windows.Forms.MouseButtons.Right)
-            {
-                //Should do the sorting thing here
-                rightClick = true;
-            }
-            else
-            {
-                rightClick = false;
-            }
-        }
+
 
         private void listView1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            //if(rightClick == false)
+            //if (rightClick == false)
             //{
+
+                // Stop previous song
                 p.stop();
 
-                
+
                 if (listView1.SelectedItems.Count > 0)
                 {
-                   
+
                     ListViewItem selected = listView1.SelectedItems[0];
                     string selectedFilePath = selected.Tag.ToString();
 
                     //label1.Text = p.getLength(selectedFilePath);
-                    startProgressBar1(selectedFilePath);
+                    startTrackBar(selectedFilePath);
 
                     currentIndex = selected.Index;
 
                     label1.Text = Path.GetFileNameWithoutExtension(selectedFilePath);
-                  
+
                     p.play(selectedFilePath, this.Handle);
 
-                 }
-                 else
-                 {
-                    // Show a message
-                 }
+                }
+                else
+                {
+                    p.stop();
+                    label1.Text = "";
+                    stopTrackBar();
+                }
+           // }
+            //else
+            //{
+                // Show a message
+            //}
+
             //}
             //else
             //{
@@ -195,6 +129,7 @@ namespace osuP
             base.WndProc(ref m);
         }
        
+        // @TODO Get files from users osu folder recursively
         public void getFiles()
         {
             listView1.Items.Clear();
@@ -215,28 +150,8 @@ namespace osuP
             listView1.Show();
         }
 
-        public void openFile()
-        {
-
-        }
-
-        //Pause Music
-        private void button6_Click(object sender, EventArgs e)
-        {
-            if (playing == true)
-            {
-                p.pause(this.Handle);
-                playing = false;
-            }
-            else
-            {
-                p.pause(this.Handle);
-                playing = true;
-            }
-           
-        }
-
-        private void startProgressBar1(string filePath)
+        // Start track bar using timer1
+        private void startTrackBar(string filePath)
         {
             timer1.Enabled = true;
             timer1.Start();
@@ -251,6 +166,7 @@ namespace osuP
 
             timer1.Tick += new EventHandler(timer1_Tick);
 
+            //@TODO  Timer 2 meant for label animation
             timer2.Enabled = true;
             timer2.Start();
             timer2.Interval = 1000;  
@@ -258,23 +174,37 @@ namespace osuP
             timer2.Tick += new EventHandler(timer2_Tick);
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
+        // Stop track bar 
+        private void stopTrackBar()
         {
-            if(trackBar2.Value != Int32.Parse(p.getLength((listView1.SelectedItems[0].Tag.ToString())))/1000)
-            {
-                trackBar2.Value = p.getPosition()/1000;
-            }
-            else
-            {
-                timer1.Stop();
-            }
+            timer1.Stop();  
+            trackBar2.Value = 0;   
         }
 
+        // Timer for progress track bar
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if(listView1.SelectedItems.Count != 0)
+            {
+                if (trackBar2.Value != Int32.Parse(p.getLength((listView1.SelectedItems[0].Tag.ToString())))/1000)
+                {
+                    trackBar2.Value = p.getPosition()/1000;
+                }
+                else
+                {
+                    timer1.Stop();
+                }
+            }
+        }
+         
+
+        // Event listener for progress track bar, seek function
         private void trackBar2_Scroll(object sender, EventArgs e)
         {
                p.seek(trackBar2.Value*1000, this.Handle);            
         }
 
+        // Set volume to 500 (midway)
         private void setVolumeBar()
         {
             trackBar1.Maximum = 1000;
@@ -286,16 +216,15 @@ namespace osuP
             trackBar1.Value = 500;
         }
 
+        // Event listener for volume bar
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
-            
+                       
             p.setVolume(trackBar1.Value);
-
-         
 
         }
 
-        //Next song
+        // Next song
         private void pictureBox1_Click(object sender, EventArgs e)
         {
             if (listView1.Items.Count - 1 > currentIndex)
@@ -310,7 +239,7 @@ namespace osuP
 
         }
 
-        //Previous song
+        // Previous song
         private void pictureBox2_Click(object sender, EventArgs e)
         {
             if (listView1.SelectedItems.Count - 1 > 0)
@@ -324,6 +253,7 @@ namespace osuP
             }
         }
 
+        // Play/pause button
         private void pictureBox3_Click(object sender, EventArgs e)
         {
             if (playing == true)
@@ -348,19 +278,9 @@ namespace osuP
             }
         }
 
-        private void trackBar1_Scroll_1(object sender, EventArgs e)
-        {
-
-        }
-
         private void timer2_Tick(object sender, EventArgs e)
         {
       
-
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
 
         }
     }
