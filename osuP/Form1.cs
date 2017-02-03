@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using System.Collections.Generic;
 using System.IO;
 
 namespace osuP
@@ -10,6 +11,7 @@ namespace osuP
 
         int currentIndex;
         bool playing;
+        Dictionary<string, string> mydict;
 
         private const int MM_MCINOTIFY = 0x3B9;
         private const int MCI_NOTIFY_SUCCESS = 0x01;
@@ -19,7 +21,24 @@ namespace osuP
 
         public Form1()
         {
+            Properties.Settings.Default.Reset();
             InitializeComponent();
+
+            if (Properties.Settings.Default.FirstRun)
+            {
+                Properties.Settings.Default.FirstRun = false;
+
+                //Get directory user wants to load files from
+                DialogResult result = chooseDirectory.ShowDialog();
+                if(result == DialogResult.OK)
+                {
+                    Properties.Settings.Default.Directory = chooseDirectory.SelectedPath;
+                }
+
+                Properties.Settings.Default.Save();            
+            }
+
+            
 
             // Get song list
             getFiles();
@@ -56,7 +75,8 @@ namespace osuP
                 {
 
                     ListViewItem selected = listView1.SelectedItems[0];
-                    string selectedFilePath = selected.Tag.ToString();
+                    string value = mydict[selected.Tag.ToString()];
+                    string selectedFilePath = value;
 
                     //label1.Text = p.getLength(selectedFilePath);
                     startTrackBar(selectedFilePath);
@@ -136,9 +156,32 @@ namespace osuP
 
             listView1.View = View.List;
 
-            string[] files = Directory.GetFiles(@"C:\Users\Public\Music\Sample Music", "*.mp3");
+           // string[] files = Directory.GetFiles(@"C:\Program Files (x86)\osu!\Songs", "*.mp3");
 
-            foreach (string song in files)
+          /*  List<string> list = new List<string>();
+            foreach (string d in Directory.GetDirectories(@"C:\Program Files (x86)\osu!\Songs"))
+                {
+                foreach(string f in Directory.GetFiles(d, "*.mp3"))
+                    {
+                    list.Add(f);
+                }
+            }*/
+
+           mydict = new Dictionary<string, string>();
+
+            foreach (string d in Directory.GetDirectories(Properties.Settings.Default.Directory))//(@"C:\Program Files (x86)\osu!\Songs"))
+            {
+                foreach (string f in Directory.GetFiles(d, "*.mp3"))
+                {
+                    try { mydict.Add(d, f);
+                    }catch
+                    {
+
+                    }
+                }
+            }
+
+            foreach (string song in mydict.Keys)
             {
                 string fileName = Path.GetFileNameWithoutExtension(song);
                 ListViewItem item = new ListViewItem(fileName);
@@ -281,6 +324,16 @@ namespace osuP
         private void timer2_Tick(object sender, EventArgs e)
         {
       
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void chooseDirectory_HelpRequest(object sender, EventArgs e)
+        {
 
         }
     }

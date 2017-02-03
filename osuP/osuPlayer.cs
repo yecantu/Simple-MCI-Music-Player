@@ -70,8 +70,10 @@ namespace osuP
         public string getLength(string path)
         {
             StringBuilder mssg = new StringBuilder(255);
+            
 
             open(path);
+           
             mciSendString("set MyMp3 time format ms", null, 0, IntPtr.Zero);
             mciSendString("status MyMp3 length", mssg, mssg.Capacity, IntPtr.Zero);
 
